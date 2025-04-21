@@ -9,7 +9,7 @@ services:
     networks:
       - suthub
 
-  app:
+  age-groups-api:
     build:
       dockerfile: Dockerfile
     container_name: api
