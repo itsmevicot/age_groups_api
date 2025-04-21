@@ -9,15 +9,6 @@ services:
     networks:
       - suthub
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rbtmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    networks:
-      - suthub
-
   app:
     build:
       dockerfile: Dockerfile
@@ -28,7 +19,6 @@ services:
       - "${PORT}:8000"
     depends_on:
       - mongo
-      - rabbitmq
     networks:
       - suthub
 
