@@ -1,10 +1,15 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.auth import get_current_user
 from app.schemas.age_group_schema import AgeGroupCreate, AgeGroupRead
 from app.dependencies import get_age_group_service
 
-router = APIRouter(prefix="/age-groups", tags=["age-groups"])
+router = APIRouter(
+    prefix="/age-groups",
+    tags=["age-groups"],
+    dependencies=[Depends(get_current_user)]
+)
 
 
 @router.post(
