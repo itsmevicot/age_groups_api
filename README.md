@@ -1,41 +1,63 @@
-# Age Groups API
+# Age Groups API  
 
-This is a simple CRUD microservice for managing age groups.
+A simple CRUD microservice for managing age groups, built with FastAPI and MongoDB.  
+It can be used standalone or in conjunction with the [Enrollment API](https://github.com/itsmevicot/enrollment_api)
+to validate and process enrollments based on age ranges.
+
+---
 
 ## Overview
 
-- Built with FastAPI and MongoDB (with `mongomock` for tests).
-- Dependency injection via FastAPI `Depends` pattern.
-- Comprehensive pytest suite with automatic collection cleanup.
+- **Framework:** FastAPI  
+- **Database:** MongoDB (uses `mongomock` in tests)  
+- **Pattern:** Dependency Injection via FastAPI `Depends`  
+- **Testing:** Comprehensive pytest suite with automatic cleanup  
+
+## Integration with Enrollment API
+
+The [Enrollment API](https://github.com/itsmevicot/enrollment_api) publishes new enrollments to a RabbitMQ queue.  
+The Enrollment Worker then calls this Age Groups API to retrieve the current buckets and determine acceptance or rejection.  
+
+1. **Enrollment Service** posts to `/enrollments/` and enqueues a message.  
+2. **Enrollment Worker** consumes the queue and calls `GET /age-groups/` on this service.  
+3. **Age Groups API** returns defined age brackets, which drive the acceptance logic.
+
+---
 
 ## Prerequisites
 
-- Python 3.10+
-- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/) (optional, for containerized deployment)
+- Python 3.10+  
+- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/) (optional)
 
 ## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/itsmevicot/age_groups_api.git
-   cd age_groups_api
-   ```
-
-2. Create a virtual environment and install dependencies:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate      # Linux/macOS
-   venv\Scripts\activate       # Windows
-   pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
+```bash
+git clone https://github.com/itsmevicot/age_groups_api.git
+cd age_groups_api
+python -m venv venv
+source venv/bin/activate    # Linux/macOS
+venv\Scripts\activate     # Windows
+pip install --upgrade pip
+pip install -r requirements.txt
+```
 
 ## Configuration
 
-Copy the sample environment file and adjust values if needed:
+Copy the sample environment file:
+
 ```bash
-cp .env .env.example
+cp .env.example .env
 ```
+
+Edit `.env` to suit your environment, e.g.: 
+
+```dotenv
+PORT=8000
+MONGO_URI=mongodb://mongo:27017/age_groups_db
+MONGO_DB_NAME=age_groups_db
+```  
+
+When working with the Enrollment API, also set `CORS_ORIGINS` or `AGE_GROUPS_API_URL` accordingly.
 
 ## Running the API
 
@@ -45,39 +67,39 @@ cp .env .env.example
 uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --reload
 ```
 
-- The `--reload` flag enables hot-reload on code changes.
-- Open your browser to `http://localhost:8000/docs` for the interactive Swagger UI.
+Open `http://localhost:${PORT}/docs` for Swagger UI.
 
 ### 2. With Docker Compose
 
-Start MongoDB and the API:
 ```bash
 docker-compose up -d
-```
+```  
 
-Follow the API logs:
+Follow logs:
+
 ```bash
 docker-compose logs -f api
-```
+```  
 
-Stop everything:
+Stop services:
+
 ```bash
 docker-compose down
-```
+```  
 
 ## API Endpoints
 
-| Method | Path                 | Description                       |
-| ------ | -------------------- | --------------------------------- |
-| POST   | `/age-groups/`       | Create a new age group            |
-| GET    | `/age-groups/`       | List all age groups               |
-| GET    | `/age-groups/{id}`   | Get a single age group by ID      |
-| DELETE | `/age-groups/{id}`   | Delete an age group by ID         |
+| Method | Path               | Description                  |
+|--------|--------------------|------------------------------|
+| POST   | `/age-groups/`     | Create a new age group       |
+| GET    | `/age-groups/`     | List all age groups          |
+| GET    | `/age-groups/{id}` | Retrieve a group by ID       |
+| DELETE | `/age-groups/{id}` | Delete a group by ID         |
 
-### Example cURL
+### Example Usage
 
 ```bash
-# Create
+# Create group
 curl -X POST http://localhost:8000/age-groups/ \
   -H "Content-Type: application/json" \
   -d '{"name":"Kids","min_age":0,"max_age":12}'
@@ -92,16 +114,18 @@ curl http://localhost:8000/age-groups/{id}
 curl -X DELETE http://localhost:8000/age-groups/{id}
 ```
 
-## Running Tests
+---
 
-Tests use `mongomock` under the hood—no real MongoDB is required.
+## Testing
+
+Runs entirely in-memory with `mongomock`:
 
 ```bash
-# in your activated virtualenv or container
 pytest
-```
+```  
 
-Or via Docker Compose:
+Or inside Docker:
+
 ```bash
 docker-compose exec api pytest
 ```
