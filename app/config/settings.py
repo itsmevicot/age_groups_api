@@ -11,8 +11,6 @@ class Settings(BaseSettings):
     port: int
     mongo_uri: str
     mongo_db_name: str
-    rabbit_uri: str
-    rabbit_queue_name: str
 
 
 def get_settings() -> Settings:
